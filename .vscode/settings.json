@@ -11,7 +11,8 @@
         "Kubernetes": "**/kubernetes/*.yaml",
         "https://json.schemastore.org/helmfile.json": [
             "file:///Users/gregmulvaney/k8s/homelab/kubernetes/apps/databases/postgres/app/helmrelease.yaml",
-            "file:///Users/gregmulvaney/k8s/homelab/kubernetes/apps/databases/postgres/ks.yaml"
+            "file:///Users/gregmulvaney/k8s/homelab/kubernetes/apps/databases/postgres/ks.yaml",
+            "file:///Users/gregmulvaney/k8s/homelab/kubernetes/apps/media/qbittorrent/app/helmrelease.yaml"
         ]
     },
     "sops.defaults.ageKeyFile": "age.key",

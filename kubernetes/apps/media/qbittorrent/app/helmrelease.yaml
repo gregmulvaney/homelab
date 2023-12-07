@@ -1,0 +1,136 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: qbittorrent
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: app-template
+      version: 2.3.0
+      interval: 30m
+      sourceRef:
+        kind: HelmRepository
+        name: app-template
+        namespace: flux-system
+
+  values:
+    controllers:
+      main:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        pod:
+          fsGroup: ${APP_GID}
+          fsGroupChangePolicy: "OnRootMismatch"
+          supplementalGroups:
+            - 65542
+        containers:
+          main:
+            nameOverride: qbittorrent
+            image:
+              repository: ghcr.io/onedr0p/qbittorrent
+              tag: 4.6.2
+            env:
+              UMASK: "022"
+              QBITTORRENT__PORT: &port 8080
+            resources:
+              requests:
+                cpu: 49m
+                memory: 1024Mi
+              limits:
+                memory: 8192Mi
+            securityContext:
+              runAsUser: ${APP_UID}
+              runAsGroup: ${APP_GID}
+
+          glueten:
+            dependsOn:
+              - main
+            image:
+              repository: ghcr.io/qdm12/gluetun
+              tag: latest
+            env:
+              - name: VPN_SERVICE_PROVIDER
+                value: mullvad
+              - name: VPN_TYPE
+                value: wireguard
+              - name: VPN_INTERFACE
+                value: wg0
+              - name: WIREGUARD_PRIVATE_KEY
+                value: kPzYV1o9PsG/sUfxWE/lnJ38v7bnBQ3/1YoTNXomE2E=
+              - name: WIREGUARD_ADDRESSES
+                value: 10.64.178.195/32
+              - name: VPN_ENDPOINT_PORT
+                value: "51820"
+              - name: VPN_PORT_FORWARDING
+                value: "true"
+              - name: SERVER_CITIES
+                value: Chicago
+              - name: SHADOWSOCKS
+                value: "true"
+              - name: FIREWALL_INPUT_PORTS
+                value: "8080"
+              - name: DOT
+                value: "off"
+            securityContext:
+              capabilities:
+                add:
+                  - NET_ADMIN
+
+          port-forward:
+            image:
+              repository: docker.io/snoringdragon/gluetun-qbittorrent-port-manager
+              tag: "1.3"
+            env:
+              - name: QBITTORRENT_SERVER
+                value: localhost
+              - name: QBITTORRENT_PORT
+                value: "8080"
+              - name: PORT_FORWARDED
+                value: "/tmp/gluetun/forwarded_port"
+
+    service:
+      main:
+        ports:
+          http:
+            port: *port
+
+    ingress:
+      main:
+        enabled: true
+        className: internal
+        hosts:
+          - host: &host "qb.${SECRET_DOMAIN}"
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - hosts:
+              - *host
+    persistence:
+      config:
+        enabled: true
+        existingClain: ${VOLSYNC_CLAIM}
+        advancedMounts:
+          main:
+            main:
+              - path: /config
+      media:
+        type: nfs
+        server: "192.168.1.31"
+        path: /mnt/Tank/Share/Media
+        advancedMounts:
+          main:
+            main:
+              - path: /data/nas-media
+
+      gluetun-data:
+        type: emptyDir
+        advancedMounts:
+          main:
+            gluetun:
+              - path: /tmp/gluetun
+            port-forward:
+              - path: /tmp/gluetun
+                readOnly: true
