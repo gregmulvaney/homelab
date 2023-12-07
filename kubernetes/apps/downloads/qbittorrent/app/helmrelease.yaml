@@ -60,6 +60,12 @@ spec:
                 runAsUser: 568
                 runAsGroup: 568
           gluetun:
+            securityContext:
+              capabilities:
+                runAsUser: 568
+                runAsGroup: 568
+                add:
+                  - NET_ADMIN
             image:
               repository: ghcr.io/qdm12/gluetun
               tag: latest@sha256:c8f61c8ecaa86e66b7afd53517a3530082ed4bb8697601ff251bbbff3f7f9f9c
@@ -97,10 +103,7 @@ spec:
                 value: "127.0.0.2"
               - name: DOT
                 value: "off"
-            securityContext:
-              capabilities:
-                add:
-                  - NET_ADMIN
+
     service:
       main:
         ports:
