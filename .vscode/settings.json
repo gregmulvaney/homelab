@@ -8,7 +8,9 @@
     },
     "yaml.schemas": {
         "ansible": "**/ansible/*.yaml",
-        "Kubernetes": "**/kubernetes/*.yaml"
+        "Kubernetes": "**/kubernetes/*.yaml",
+        "https://json.schemastore.org/helmfile.json": "file:///Users/gregmulvaney/k8s/homelab/kubernetes/apps/databases/postgres/app/helmrelease.yaml",
+        "https://json.schemastore.org/kustomization.json": "file:///Users/gregmulvaney/k8s/homelab/kubernetes/apps/databases/postgres/ks.yaml"
     },
     "sops.defaults.ageKeyFile": "age.key",
     "ansible.python.interpreterPath": "/Users/gregmulvaney/k8s/homelab/.venv/bin/python"
