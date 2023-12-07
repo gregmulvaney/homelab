@@ -9,56 +9,42 @@ spec:
     spec:
       chart: app-template
       version: 2.3.0
+      interval: 30m
       sourceRef:
         kind: HelmRepository
         name: bjw-s
         namespace: flux-system
-  maxHistory: 2
-  install:
-    remediation:
-      retries: 3
-  upgrade:
-    cleanupOnFail: true
-    remediation:
-      retries: 3
-  uninstall:
-    keepHistory: false
   values:
     controllers:
       main:
         annotations:
-          reloader.stakater.com/auto: "true"
+          configmap.reloader.stakater.com/reload: qbittorrent-dnsdist
+
         pod:
           securityContext:
-            runAsUser: 568
-            runAsGroup: 568
             fsGroup: 568
-            fsGroupChangePolicy: OnRootMismatch
-            supplementalGroups: [10000]
+            fsGroupChangePolicy: "OnRootMismatch"
+            supplementalGroups:
+              - 65542
+
         containers:
           main:
+            nameOverride: qbittorrent
             image:
               repository: ghcr.io/onedr0p/qbittorrent
               tag: 4.6.2@sha256:ab8cc91bcf93d2a147767032d37c52ca2528439d037090657a18ea39cfeb272b
             env:
-              TZ: America/Chicago
+              UMASK: "022"
               QBITTORRENT__PORT: &port 8080
-              QBITTORRENT__BT_PORT: &bittorrentPort 50413
-              QBT_Preferences__WebUI__AlternativeUIEnabled: false
-              QBT_Preferences__WebUI__AuthSubnetWhitelistEnabled: true
-              QBT_Preferences__WebUI__AuthSubnetWhitelist: |-
-                10.42.0.0/16, 10.43.0.0/16, 192.168.1.0/24
-              # QBT_Preferences__WebUI__LocalHostAuth: false
-              # QBT_BitTorrent__Session__Interface: eth0
-              # QBT_BitTorrent__Session__InterfaceAddress:
-              #   valueFrom:
-              #     fieldRef:
-              #       fieldPath: status.podIP
-              # QBT_BitTorrent__Session__InterfaceName: eth0
+            resources:
+              requests:
+                cpu: 49m
+                memory: 1024Mi
+              limits:
+                memory: 8192Mi
             securityContext:
-              capabilities:
-                runAsUser: 568
-                runAsGroup: 568
+              runAsUser: 568
+              runAsGroup: 568
 
           dnsdist:
             image:
@@ -66,12 +52,6 @@ spec:
               tag: 1.8.2
 
           gluetun:
-            securityContext:
-              capabilities:
-                runAsUser: 568
-                runAsGroup: 568
-                add:
-                  - NET_ADMIN
             image:
               repository: ghcr.io/qdm12/gluetun
               tag: latest@sha256:c8f61c8ecaa86e66b7afd53517a3530082ed4bb8697601ff251bbbff3f7f9f9c
@@ -82,8 +62,6 @@ spec:
                 value: "wireguard"
               - name: VPN_INTERFACE
                 value: "wg0"
-              - name: VPN_ENDPOINT_IP
-                value: "68.235.44.2"
               - name: VPN_ENDPOINT_PORT
                 value: "51820"
               - name: VPN_PORT_FORWARDING
@@ -92,23 +70,22 @@ spec:
                 value: "mullvad"
               - name: FIREWALL_INPUT_PORTS
                 value: "8080"
-              - name: WIREGUARD_PRIVATE_KEY
-                value: "4C0SO7FIA4t54FQqHmRW30LeyHmG1SrlN67HoQYgfHM="
-              - name: WIREGUARD_PUBLIC_KEY
-                value: "T5aabskeYCd5dn81c3jOKVxGWQSLwpqHSHf6wButSgw="
-              - name: WIREGUARD_ADDRESSES
-                value: "10.66.43.63/32"
-              - name: SERVER_CITY
-                value: "Chicago"
               - name: FIREWALL_OUTBOUND_SUBNETS
                 # Allow access to k8s subnets
                 value: "10.42.0.0/16,10.43.0.0/16"
               - name: SHADOWSOCKS
                 value: "on"
-              - name: DNS_PLAINTEXT_ADDRESS
-                value: "127.0.0.2"
               - name: DOT
                 value: "off"
+              - name: DNS_PLAINTEXT_ADDRESS
+                value: "127.0.0.2"
+            # envFrom:
+            #   - secretRef:
+            #       name: qbittorrent-secret
+            securityContext:
+              capabilities:
+                add:
+                  - NET_ADMIN
 
           port-forward:
             image:
@@ -121,17 +98,19 @@ spec:
                 value: "8080"
               - name: PORT_FORWARDED
                 value: "/tmp/gluetun/forwarded_port"
+
     service:
       main:
         ports:
           http:
             port: *port
+
     ingress:
       main:
         enabled: true
-        className: internal
+        className: "internal"
         hosts:
-          - host: &host "qb.${SECRET_DOMAIN}"
+          - host: &host "${SECRET_DOMAIN}"
             paths:
               - path: /
                 service:
@@ -141,10 +120,6 @@ spec:
           - hosts:
               - *host
     persistence:
-      config:
-        enabled: true
-        type: emptyDir
-
       dnsdist-config:
         type: configMap
         name: qbittorrent-dnsdist
@@ -154,7 +129,6 @@ spec:
               - path: /etc/dnsdist/dnsdist.conf
                 subPath: dnsdist.conf
                 readOnly: true
-
       gluetun-data:
         type: emptyDir
         advancedMounts:
@@ -164,3 +138,6 @@ spec:
             port-forward:
               - path: /tmp/gluetun
                 readOnly: true
+      config:
+        type: emptyDir
+        enabled: true
