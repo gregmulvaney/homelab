@@ -3,7 +3,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
   name: postgres
-  namespace: databases
 spec:
   interval: 30m
   chart:
@@ -31,6 +30,8 @@ spec:
         auth:
           username: postgres
           password: postgres
+          database: postgres
+          postgresPassword: postgres
     image:
       registry: docker.io
       repository: bitnami/postgresql
@@ -43,6 +44,3 @@ spec:
       enabled: true
       serviceMonitor:
         enabled: true
-        namespace: monitoring
-        additionalLabels:
-          release: prometheus
