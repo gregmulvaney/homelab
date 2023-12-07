@@ -66,8 +66,12 @@ spec:
                 value: "51820"
               - name: VPN_PORT_FORWARDING
                 value: "on"
+              - name: WIREGUARD_PRIVATE_KEY
+                value: "4C0SO7FIA4t54FQqHmRW30LeyHmG1SrlN67HoQYgfHM="
+              - name: WIREGUARD_ADDRESSES
+                value: "10.66.43.63/32"
               - name: VPN_PORT_FORWARDING_PROVIDER
-                value: "mullvad"
+                value: "protonvpn"
               - name: FIREWALL_INPUT_PORTS
                 value: "8080"
               - name: FIREWALL_OUTBOUND_SUBNETS
