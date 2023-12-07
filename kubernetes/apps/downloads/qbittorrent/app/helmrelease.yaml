@@ -34,8 +34,9 @@ spec:
               repository: ghcr.io/onedr0p/qbittorrent
               tag: 4.6.2@sha256:ab8cc91bcf93d2a147767032d37c52ca2528439d037090657a18ea39cfeb272b
             env:
+              UMASK: "022"
               TZ: America/Chicago
-              QBITTORRENT__PORT: &port 80
+              QBITTORRENT__PORT: &port 8080
               QBITTORRENT__BT_PORT: &bittorrentPort 50413
               QBT_Preferences__WebUI__AlternativeUIEnabled: false
               QBT_Preferences__WebUI__AuthSubnetWhitelistEnabled: true
@@ -48,6 +49,46 @@ spec:
                   fieldRef:
                     fieldPath: status.podIP
               QBT_BitTorrent__Session__InterfaceName: eth0
+            securityContext:
+              capabilities:
+                runAsUser: 568
+                runAsGroup: 568
+          gluetun:
+            image:
+              repository: ghcr.io/qdm12/gluetun
+              tag: latest@sha256:c8f61c8ecaa86e66b7afd53517a3530082ed4bb8697601ff251bbbff3f7f9f9c
+            env:
+              - name: VPN_SERVICE_PROVIDER
+                value: "mullvad"
+              - name: VPN_TYPE
+                value: "wireguard"
+              - name: VPN_INTERFACE
+                value: "wg0"
+              - name: VPN_ENDPOINT_PORT
+                value: "51820"
+              - name: VPN_PORT_FORWARDING
+                value: "on"
+              - name: VPN_PORT_FORWARDING_PROVIDER
+                value: "mullvad"
+              - name: FIREWALL_INPUT_PORTS
+                value: "8080"
+              - name: WIREGUARD_PRIVATE_KEY
+                value: 4C0SO7FIA4t54FQqHmRW30LeyHmG1SrlN67HoQYgfHM=
+              - name: WIREGUARD_ADDRESSES
+                value: "10.66.43.63/32"
+              - name: SERVER_CITY
+                value: "Chicago"
+              - name: FIREWALL_OUTBOUND_SUBNETS
+                # Allow access to k8s subnets
+                value: "10.42.0.0/16,10.43.0.0/16"
+              - name: SHADOWSOCKS
+                value: "on"
+              - name: DOT
+                value: "off"
+            securityContext:
+              capabilities:
+                add:
+                  - NET_ADMIN
         pod:
           securityContext:
             runAsUser: 568
