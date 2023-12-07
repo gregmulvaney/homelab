@@ -12,25 +12,23 @@ spec:
       interval: 30m
       sourceRef:
         kind: HelmRepository
-        name: app-template
+        name: bjw-s
         namespace: flux-system
-
   values:
     controllers:
       main:
-        annotations:
-          reloader.stakater.com/auto: "true"
         pod:
-          fsGroup: ${APP_GID}
-          fsGroupChangePolicy: "OnRootMismatch"
-          supplementalGroups:
-            - 65542
+          securityContext:
+            fsGroup: ${APP_GID}
+            fsGroupChangePolicy: "OnRootMismatch"
+            supplementalGroups:
+              - 65542
         containers:
           main:
             nameOverride: qbittorrent
             image:
               repository: ghcr.io/onedr0p/qbittorrent
-              tag: 4.6.2
+              tag: 4.6.2@sha256:ab8cc91bcf93d2a147767032d37c52ca2528439d037090657a18ea39cfeb272b
             env:
               UMASK: "022"
               QBITTORRENT__PORT: &port 8080
@@ -44,39 +42,15 @@ spec:
               runAsUser: ${APP_UID}
               runAsGroup: ${APP_GID}
 
-          glueten:
-            dependsOn:
-              - main
+          dnsdist:
+            image:
+              repository: docker.io/powerdns/dnsdist-18
+              tag: 1.8.2
+
+          gluetun:
             image:
               repository: ghcr.io/qdm12/gluetun
-              tag: latest
-            env:
-              - name: VPN_SERVICE_PROVIDER
-                value: mullvad
-              - name: VPN_TYPE
-                value: wireguard
-              - name: VPN_INTERFACE
-                value: wg0
-              - name: WIREGUARD_PRIVATE_KEY
-                value: kPzYV1o9PsG/sUfxWE/lnJ38v7bnBQ3/1YoTNXomE2E=
-              - name: WIREGUARD_ADDRESSES
-                value: 10.64.178.195/32
-              - name: VPN_ENDPOINT_PORT
-                value: "51820"
-              - name: VPN_PORT_FORWARDING
-                value: "true"
-              - name: SERVER_CITIES
-                value: Chicago
-              - name: SHADOWSOCKS
-                value: "true"
-              - name: FIREWALL_INPUT_PORTS
-                value: "8080"
-              - name: DOT
-                value: "off"
-            securityContext:
-              capabilities:
-                add:
-                  - NET_ADMIN
+              tag: latest@sha256:c8f61c8ecaa86e66b7afd53517a3530082ed4bb8697601ff251bbbff3f7f9f9c
 
           port-forward:
             image:
@@ -101,29 +75,21 @@ spec:
         enabled: true
         className: internal
         hosts:
-          - host: &host "qb.${SECRET_DOMAIN}"
+          - host: qb.${SECRET_DOMAIN}
             paths:
               - path: /
-                pathType: Prefix
-        tls:
-          - hosts:
-              - *host
+                service:
+                  name: main
+                  port: http
+
     persistence:
       config:
         enabled: true
-        existingClain: ${VOLSYNC_CLAIM}
+        existingClaim: "${VOLSYNC_CLAIM}"
         advancedMounts:
           main:
             main:
               - path: /config
-      media:
-        type: nfs
-        server: "192.168.1.31"
-        path: /mnt/Tank/Share/Media
-        advancedMounts:
-          main:
-            main:
-              - path: /data/nas-media
 
       gluetun-data:
         type: emptyDir
