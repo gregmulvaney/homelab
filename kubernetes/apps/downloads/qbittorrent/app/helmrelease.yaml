@@ -28,13 +28,19 @@ spec:
       main:
         annotations:
           reloader.stakater.com/auto: "true"
+        pod:
+          securityContext:
+            runAsUser: 568
+            runAsGroup: 568
+            fsGroup: 568
+            fsGroupChangePolicy: OnRootMismatch
+            supplementalGroups: [10000]
         containers:
           main:
             image:
               repository: ghcr.io/onedr0p/qbittorrent
               tag: 4.6.2@sha256:ab8cc91bcf93d2a147767032d37c52ca2528439d037090657a18ea39cfeb272b
             env:
-              UMASK: "022"
               TZ: America/Chicago
               QBITTORRENT__PORT: &port 8080
               QBITTORRENT__BT_PORT: &bittorrentPort 50413
@@ -42,13 +48,13 @@ spec:
               QBT_Preferences__WebUI__AuthSubnetWhitelistEnabled: true
               QBT_Preferences__WebUI__AuthSubnetWhitelist: |-
                 10.42.0.0/16, 10.43.0.0/16, 192.168.1.0/24
-              QBT_Preferences__WebUI__LocalHostAuth: false
-              QBT_BitTorrent__Session__Interface: eth0
-              QBT_BitTorrent__Session__InterfaceAddress:
-                valueFrom:
-                  fieldRef:
-                    fieldPath: status.podIP
-              QBT_BitTorrent__Session__InterfaceName: eth0
+              # QBT_Preferences__WebUI__LocalHostAuth: false
+              # QBT_BitTorrent__Session__Interface: eth0
+              # QBT_BitTorrent__Session__InterfaceAddress:
+              #   valueFrom:
+              #     fieldRef:
+              #       fieldPath: status.podIP
+              # QBT_BitTorrent__Session__InterfaceName: eth0
             securityContext:
               capabilities:
                 runAsUser: 568
@@ -87,19 +93,14 @@ spec:
                 value: "10.42.0.0/16,10.43.0.0/16"
               - name: SHADOWSOCKS
                 value: "on"
+              - name: DNS_PLAINTEXT_ADDRESS
+                value: "127.0.0.2"
               - name: DOT
                 value: "off"
             securityContext:
               capabilities:
                 add:
                   - NET_ADMIN
-        pod:
-          securityContext:
-            runAsUser: 568
-            runAsGroup: 568
-            fsGroup: 568
-            fsGroupChangePolicy: OnRootMismatch
-            supplementalGroups: [10000]
     service:
       main:
         ports:
