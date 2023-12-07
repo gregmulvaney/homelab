@@ -51,6 +51,25 @@ spec:
             image:
               repository: ghcr.io/qdm12/gluetun
               tag: latest@sha256:c8f61c8ecaa86e66b7afd53517a3530082ed4bb8697601ff251bbbff3f7f9f9c
+            env:
+              - name: VPN_SERVICE_PROVIDER
+                value: "mullvad"
+              - name: VPN_TYPE
+                value: "wireguard"
+              - name: VPN_INTERFACE
+                value: "wg0"
+              - name: VPN_ENDPOINT_PORT
+                value: "51820"
+              - name: FIREWALL_INPUT_PORTS
+                value: "8080"
+              - name: FIREWALL_OUTBOUND_SUBNETS
+                value: "10.43.0.0/16"
+              - name: WIREGUARD_PRIVATE_KEY
+                value: "4C0SO7FIA4t54FQqHmRW30LeyHmG1SrlN67HoQYgfHM="
+              - name: WIREGUARD_ADDRESSES
+                value: "10.66.43.63/32"
+              - name: SERVER_CITIES
+                value: "Chicago"
 
           port-forward:
             image:
@@ -75,12 +94,15 @@ spec:
         enabled: true
         className: internal
         hosts:
-          - host: qb.${SECRET_DOMAIN}
+          - host: &host "qb.${SECRET_DOMAIN}"
             paths:
               - path: /
                 service:
                   name: main
                   port: http
+        tls:
+          - hosts:
+              - *host
 
     persistence:
       config:
