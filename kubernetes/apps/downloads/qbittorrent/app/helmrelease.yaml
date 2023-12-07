@@ -64,12 +64,20 @@ spec:
                 value: "wg0"
               - name: VPN_ENDPOINT_PORT
                 value: "51820"
+              - name: VPN_ENDPOINT_ADDRESS
+                value: "68.235.44.2"
               - name: VPN_PORT_FORWARDING
                 value: "on"
+              - name: SERVER_COUNTRY
+                value: "US"
+              - name: SERVER_CITY
+                value: "Chicago"
               - name: WIREGUARD_PRIVATE_KEY
                 value: "4C0SO7FIA4t54FQqHmRW30LeyHmG1SrlN67HoQYgfHM="
               - name: WIREGUARD_ADDRESSES
                 value: "10.66.43.63/32"
+              - name: WIREGUARD_PUBLIC_KEY
+                value: "T5aabskeYCd5dn81c3jOKVxGWQSLwpqHSHf6wButSgw="
               - name: VPN_PORT_FORWARDING_PROVIDER
                 value: "protonvpn"
               - name: FIREWALL_INPUT_PORTS
