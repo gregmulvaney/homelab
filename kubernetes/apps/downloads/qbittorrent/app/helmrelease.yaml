@@ -19,14 +19,12 @@ spec:
       main:
         annotations:
           configmap.reloader.stakater.com/reload: qbittorrent-dnsdist
-
         pod:
           securityContext:
             fsGroup: 568
             fsGroupChangePolicy: "OnRootMismatch"
             supplementalGroups:
               - 65542
-
         containers:
           main:
             nameOverride: qbittorrent
@@ -45,12 +43,10 @@ spec:
             securityContext:
               runAsUser: 568
               runAsGroup: 568
-
           dnsdist:
             image:
               repository: docker.io/powerdns/dnsdist-18
               tag: 1.8.2
-
           gluetun:
             image:
               repository: ghcr.io/qdm12/gluetun
@@ -98,7 +94,6 @@ spec:
               capabilities:
                 add:
                   - NET_ADMIN
-
           port-forward:
             image:
               repository: docker.io/snoringdragon/gluetun-qbittorrent-port-manager
@@ -110,13 +105,11 @@ spec:
                 value: "8080"
               - name: PORT_FORWARDED
                 value: "/tmp/gluetun/forwarded_port"
-
     service:
       main:
         ports:
           http:
             port: *port
-
     ingress:
       main:
         enabled: true
@@ -151,8 +144,8 @@ spec:
               - path: /tmp/gluetun
                 readOnly: true
       config:
-        type: emptyDir
         enabled: true
+        existingClaim: qbittorrent-data
       media:
         type: nfs
         server: 192.168.1.31

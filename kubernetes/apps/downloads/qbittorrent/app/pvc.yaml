@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qbittorrent-data
+  namespace: downloads
+  labels:
+    app.kubernetes.io/name: qbittorrent
+    app.kubernetes.io/instance: qbittorrent
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: local-path
