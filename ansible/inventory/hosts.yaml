@@ -5,12 +5,15 @@ kubernetes:
       hosts:
         k3s-master:
           ansible_user: root
-          ansible_host: 192.168.1.148
+          ansible_host: 192.168.1.84
     worker:
       hosts:
         k3s-worker-1:
           ansible_user: root
-          ansible_host: 192.168.1.75
+          ansible_host: 192.168.1.83
         k3s-worker-2:
           ansible_user: root
-          ansible_host: 192.168.1.74
+          ansible_host: 192.168.1.176
+        k3s-worker-3:
+          ansible_user: root
+          ansible_host: 192.168.1.146
